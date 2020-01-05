@@ -24,7 +24,7 @@ exports = module.exports = function() {
 
     circularQueue.push(path.relative(self.options.src, p));
 
-    function findCircular (c) {
+    function findCircular(c) {
       if (!c) return;
 
       const newBead = c.bead;
@@ -44,7 +44,7 @@ exports = module.exports = function() {
     findCircular(chain.previous);
 
     return Promise.resolve(chain);
-  })
+  });
   this.register('parse-script-dep', function(chain, dep) {
     chain = chain.sfc ? chain.sfc.script : chain;
 
@@ -57,6 +57,8 @@ exports = module.exports = function() {
         // TODO: resovle fail ?
         return rst.path;
       }
+
+      this.graph.addEdge(bead.id, file);
 
       let depBead = this.producer.make(ScriptBead, file);
       const newChain = chain.createChain(depBead);
@@ -73,19 +75,23 @@ exports = module.exports = function() {
     const bead = chain.bead;
     const compiledCode = bead.compiled.code;
 
-    if (!bead.parsed) {
-      let source = new ReplaceSource(new RawSource(compiledCode));
-      let astData = toAst(compiledCode);
-
-      bead.parsed = {
-        code: source,
-        ast: astData,
-        dependences: [],
-        replaces: [],
-        walker: new Walker(astData, chain)
-      };
-      bead.parsed.walker.run();
+    if (bead.parsed) {
+      return Promise.resolve(chain);
     }
+
+    this.graph.addVertices(bead.id);
+
+    let source = new ReplaceSource(new RawSource(compiledCode));
+    let astData = toAst(compiledCode);
+
+    bead.parsed = {
+      code: source,
+      ast: astData,
+      dependences: [],
+      replaces: [],
+      walker: new Walker(astData, chain)
+    };
+    bead.parsed.walker.run();
 
     let depTasks = bead.parsed.dependences.map(dep => this.hookUnique('parse-script-dep', chain, dep));
     return Promise.all(depTasks).then(chains => {

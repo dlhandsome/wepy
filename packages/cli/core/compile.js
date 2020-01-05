@@ -29,6 +29,7 @@ const { AppChain, PageChain, ComponentChain, Chain } = require('./compile/chain'
 const { Bead } = require('./compile/bead');
 const Producer = require('./Producer');
 const Resolver = require('./Resolver');
+const Graph = require('./Graph');
 
 class Compile extends Hook {
   constructor(opt) {
@@ -59,6 +60,7 @@ class Compile extends Hook {
 
     this.cache = new CacheFile();
     this.producer = new Producer();
+    this.graph = new Graph();
 
     const resolver = new Resolver(
       Object.assign({}, this.options.resolve, {
