@@ -2,10 +2,12 @@ exports = module.exports = function() {
   let totalRefCache = {};
 
   function getParseRefFunc(hasBindAttrRef = false) {
-    return function({ item, ctx, expr, rel }) {
+    return function({ item, chain, expr }) {
+      let bead = chain.bead;
       let attrs = item.attribs;
       let parsedRef = {};
-      let assetsId = this.assets.get(ctx.file);
+      let assetsId = bead.id;
+      let rel = bead.parsed.rel;
       let refCache;
       let elemId;
 
